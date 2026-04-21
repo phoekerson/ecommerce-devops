@@ -1,0 +1,39 @@
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+COPY src/backend/package*.json ./
+# Build requires TypeScript toolchain, then we prune dev deps.
+RUN npm ci
+
+COPY src/backend/tsconfig.json ./
+COPY src/backend/src ./src
+
+RUN npm run build && npm prune --omit=dev
+
+FROM node:18-alpine AS runtime
+
+WORKDIR /app
+
+RUN apk add --no-cache dumb-init wget && \
+    addgroup -g 1001 nodejs && \
+    adduser -D -u 1001 -G nodejs appuser
+
+ARG NODE_ENV=production
+ARG PORT=5000
+ENV NODE_ENV=${NODE_ENV}
+ENV PORT=${PORT}
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY src/backend/package*.json ./
+
+USER 1001:1001
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -qO- "http://127.0.0.1:5000/api/health" >/dev/null || exit 1
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "dist/server.js"]
