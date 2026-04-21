@@ -8,7 +8,10 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "jest --runInBand --coverage"
+    "test": "jest --runInBand --forceExit",
+    "test:coverage": "jest --runInBand --coverage --forceExit",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
   },
   "jest": {
     "preset": "ts-jest",
