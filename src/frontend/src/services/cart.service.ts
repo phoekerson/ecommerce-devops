@@ -3,22 +3,22 @@ import type { CartItem, Order } from "../types";
 
 export const cartService = {
   getCart: async (): Promise<CartItem[]> => {
-    const response = await api.get<CartItem[]>("/api/cart");
+    const response = await api.get<CartItem[]>("/cart");
     return response.data;
   },
   addToCart: async (productId: number, quantity = 1): Promise<CartItem> => {
-    const response = await api.post<CartItem>("/api/cart", { productId, quantity });
+    const response = await api.post<CartItem>("/cart", { productId, quantity });
     return response.data;
   },
   removeFromCart: async (id: number): Promise<void> => {
-    await api.delete(`/api/cart/${id}`);
+    await api.delete(`/cart/${id}`);
   },
   getOrders: async (): Promise<Order[]> => {
-    const response = await api.get<Order[]>("/api/orders");
+    const response = await api.get<Order[]>("/orders");
     return response.data;
   },
   createOrder: async (): Promise<Order> => {
-    const response = await api.post<Order>("/api/orders");
+    const response = await api.post<Order>("/orders");
     return response.data;
   }
 };

@@ -8,7 +8,7 @@ interface AuthResponse {
 
 export const authService = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>("/api/auth/login", { email, password });
+    const response = await api.post<AuthResponse>("/auth/login", { email, password });
     return response.data;
   },
   register: async (payload: {
@@ -17,11 +17,11 @@ export const authService = {
     email: string;
     password: string;
   }): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>("/api/auth/register", payload);
+    const response = await api.post<AuthResponse>("/auth/register", payload);
     return response.data;
   },
   getMe: async (): Promise<{ user: User }> => {
-    const response = await api.get<{ user: User }>("/api/auth/me");
+    const response = await api.get<{ user: User }>("/auth/me");
     return response.data;
   }
 };

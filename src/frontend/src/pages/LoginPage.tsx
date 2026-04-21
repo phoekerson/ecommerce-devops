@@ -31,30 +31,42 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h1 className="mb-6 text-2xl font-bold text-indigo-700">Connexion</h1>
+    <div className="flex min-h-[80vh] items-center justify-center">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
+      <h1 className="text-2xl font-bold text-slate-900">Connexion</h1>
+      <p className="mb-6 mt-2 text-sm text-slate-500">Accedez a votre espace client.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-          required
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-          required
-        />
+        <div>
+          <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
+            Mot de passe
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            required
+          />
+        </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:bg-slate-300"
+          className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 font-medium text-white transition hover:bg-indigo-700 disabled:bg-slate-300"
         >
           {loading ? "Connexion..." : "Se connecter"}
         </button>
@@ -62,9 +74,10 @@ const LoginPage = () => {
       <p className="mt-4 text-sm text-slate-600">
         Pas de compte ?{" "}
         <Link className="font-medium text-indigo-700 hover:underline" to="/register">
-          Inscription
+          S'inscrire
         </Link>
       </p>
+      </div>
     </div>
   );
 };

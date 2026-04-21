@@ -30,55 +30,68 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h1 className="mb-6 text-2xl font-bold text-indigo-700">Inscription</h1>
+    <div className="flex min-h-[80vh] items-center justify-center">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
+      <h1 className="text-2xl font-bold text-slate-900">Inscription</h1>
+      <p className="mb-6 mt-2 text-sm text-slate-500">Creez votre compte en 30 secondes.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          value={form.firstName}
-          onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-          placeholder="First name"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-          required
-        />
-        <input
-          value={form.lastName}
-          onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-          placeholder="Last name"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-          required
-        />
-        <input
-          type="email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          placeholder="Email"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-          required
-        />
-        <input
-          type="password"
-          minLength={6}
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          placeholder="Password (6+ chars)"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-          required
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Prenom</label>
+            <input
+              value={form.firstName}
+              onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              required
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Nom</label>
+            <input
+              value={form.lastName}
+              onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            required
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Mot de passe</label>
+          <input
+            type="password"
+            minLength={6}
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            required
+          />
+        </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:bg-slate-300"
+          className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 font-medium text-white hover:bg-indigo-700 disabled:bg-slate-300"
         >
-          {loading ? "Creation..." : "Creer un compte"}
+          {loading ? "Creation..." : "S'inscrire"}
         </button>
       </form>
       <p className="mt-4 text-sm text-slate-600">
-        Deja membre ?{" "}
+        Deja un compte ?{" "}
         <Link className="font-medium text-indigo-700 hover:underline" to="/login">
-          Connexion
+          Se connecter
         </Link>
       </p>
+      </div>
     </div>
   );
 };

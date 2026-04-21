@@ -20,22 +20,22 @@ interface ProductFilters {
 
 export const productService = {
   getProducts: async (filters: ProductFilters): Promise<ProductListResponse> => {
-    const response = await api.get<ProductListResponse>("/api/products", { params: filters });
+    const response = await api.get<ProductListResponse>("/products", { params: filters });
     return response.data;
   },
   getProduct: async (id: string): Promise<Product> => {
-    const response = await api.get<Product>(`/api/products/${id}`);
+    const response = await api.get<Product>(`/products/${id}`);
     return response.data;
   },
   createProduct: async (payload: Omit<Product, "id">): Promise<Product> => {
-    const response = await api.post<Product>("/api/products", payload);
+    const response = await api.post<Product>("/products", payload);
     return response.data;
   },
   updateProduct: async (id: number, payload: Partial<Omit<Product, "id">>): Promise<Product> => {
-    const response = await api.put<Product>(`/api/products/${id}`, payload);
+    const response = await api.put<Product>(`/products/${id}`, payload);
     return response.data;
   },
   deleteProduct: async (id: number): Promise<void> => {
-    await api.delete(`/api/products/${id}`);
+    await api.delete(`/products/${id}`);
   }
 };

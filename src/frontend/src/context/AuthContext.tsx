@@ -1,70 +1,49 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from "react";
-import { authService } from "../services/auth.service";
-import { setUnauthorizedHandler } from "../services/api";
+import { createContext, useMemo, useState } from "react";
 import type { User } from "../types";
 
-interface AuthContextValue {
+interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (newToken: string, newUser: User) => void;
   logout: () => void;
-  refreshProfile: () => Promise<void>;
 }
-
-export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const TOKEN_KEY = "token";
 const USER_KEY = "user";
 
+export const AuthContext = createContext<AuthContextType | null>(null);
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(localStorage.getItem(TOKEN_KEY));
   const [user, setUser] = useState<User | null>(() => {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as User) : null;
+    const saved = localStorage.getItem(USER_KEY);
+    return saved ? (JSON.parse(saved) as User) : null;
   });
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    setToken(null);
-    setUser(null);
-  }, []);
-
-  const login = useCallback((newToken: string, newUser: User) => {
+  const login = (newToken: string, newUser: User) => {
     localStorage.setItem(TOKEN_KEY, newToken);
     localStorage.setItem(USER_KEY, JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
-  }, []);
+  };
 
-  const refreshProfile = useCallback(async () => {
-    if (!localStorage.getItem(TOKEN_KEY)) return;
-    const response = await authService.getMe();
-    setUser(response.user);
-    localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-  }, []);
+  const logout = () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    setToken(null);
+    setUser(null);
+  };
 
-  useEffect(() => {
-    setUnauthorizedHandler(logout);
-  }, [logout]);
-
-  useEffect(() => {
-    if (token && !user) {
-      void refreshProfile().catch(logout);
-    }
-  }, [logout, refreshProfile, token, user]);
-
-  const value = useMemo(
+  const value = useMemo<AuthContextType>(
     () => ({
       user,
       token,
       isAuthenticated: Boolean(token),
       login,
-      logout,
-      refreshProfile
+      logout
     }),
-    [login, logout, refreshProfile, token, user]
+    [token, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

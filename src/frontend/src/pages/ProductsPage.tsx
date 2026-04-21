@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { AxiosError } from "axios";
-import LoadingSpinner from "../components/LoadingSpinner";
 import ProductCard from "../components/ProductCard";
 import { useCartActions } from "../hooks/useCart";
 import { useAuth } from "../hooks/useAuth";
 import { useProducts } from "../hooks/useProducts";
 import type { ApiError } from "../types";
 
-const categories = ["", "electronics", "fashion", "home", "beauty", "sports"];
+const categories = ["", "electronics", "clothing", "food", "other"];
 
 const ProductsPage = () => {
   const { isAuthenticated } = useAuth();
@@ -32,45 +31,60 @@ const ProductsPage = () => {
     }
   };
 
-  if (isLoading) return <LoadingSpinner />;
-  if (isError || !data) return <p className="text-red-600">Impossible de charger les produits.</p>;
+  if (isError) return <p className="text-red-600">Impossible de charger les produits.</p>;
 
   return (
     <section>
-      <h1 className="mb-4 text-2xl font-bold text-indigo-700">Catalogue Produits</h1>
-      <div className="mb-6 grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-3">
-        <input
-          value={search}
-          onChange={(e) => {
-            setPage(1);
-            setSearch(e.target.value);
-          }}
-          placeholder="Rechercher un produit..."
-          className="rounded-md border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-        />
-        <select
-          value={category}
-          onChange={(e) => {
-            setPage(1);
-            setCategory(e.target.value);
-          }}
-          className="rounded-md border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-        >
-          {categories.map((cat) => (
-            <option key={cat || "all"} value={cat}>
-              {cat || "Toutes categories"}
-            </option>
-          ))}
-        </select>
+      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-2xl font-bold text-slate-900">Produits</h1>
+          <div className="flex w-full flex-col gap-3 sm:flex-row md:max-w-xl">
+            <input
+              value={search}
+              onChange={(e) => {
+                setPage(1);
+                setSearch(e.target.value);
+              }}
+              placeholder="Rechercher un produit..."
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+            <select
+              value={category}
+              onChange={(e) => {
+                setPage(1);
+                setCategory(e.target.value);
+              }}
+              className="rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            >
+              {categories.map((cat) => (
+                <option key={cat || "all"} value={cat}>
+                  {cat || "Toutes categories"}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {data.data.map((product) => (
-          <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((skeleton) => (
+            <div key={skeleton} className="h-72 animate-pulse rounded-xl bg-slate-200" />
+          ))}
+        </div>
+      ) : data && data.data.length > 0 ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {data.data.map((product) => (
+            <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+          Aucun produit trouve
+        </div>
+      )}
 
       <div className="mt-6 flex items-center justify-center gap-3">
         <button
@@ -80,12 +94,10 @@ const ProductsPage = () => {
         >
           Precedent
         </button>
-        <span className="text-sm text-slate-600">
-          Page {data.pagination.page} / {Math.max(1, data.pagination.pages)}
-        </span>
+        <span className="text-sm text-slate-600">Page {data?.pagination.page ?? 1}</span>
         <button
-          onClick={() => setPage((p) => Math.min(data.pagination.pages || 1, p + 1))}
-          disabled={page >= data.pagination.pages}
+          onClick={() => setPage((p) => Math.min(data?.pagination.pages || 1, p + 1))}
+          disabled={page >= (data?.pagination.pages || 1)}
           className="rounded-md border border-slate-200 px-3 py-2 text-sm hover:bg-slate-100 disabled:opacity-40"
         >
           Suivant
