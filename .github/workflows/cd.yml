@@ -1,95 +1,81 @@
-name: CD
+name: CD Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 concurrency:
-  group: deploy-production
+  group: cd-production
   cancel-in-progress: false
 
 jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: production
-    # Required repository secrets:
-    # VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_PORT, DB_PASSWORD, JWT_SECRET
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup SSH key
-        shell: bash
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Generate production env file
-        shell: bash
+      - name: Deploy to VPS
         run: |
-          cat <<EOF > .env.production
-          NODE_ENV=production
-          PORT=5000
-          DB_HOST=postgres
-          DB_PORT=5432
-          DB_NAME=ecommerce
-          DB_USER=postgres
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          CORS_ORIGIN=*
-          POSTGRES_DB=ecommerce
-          POSTGRES_USER=postgres
-          POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}
-          EOF
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -p ${{ secrets.VPS_PORT }} \
+              ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
 
-      - name: Ensure target directory exists
-        shell: bash
-        run: |
-          ssh -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "mkdir -p /opt/ecommerce/infrastructure/docker /opt/ecommerce/infrastructure/nginx"
+            set -e
+            cd /opt/ecommerce/ecommerce-devops
 
-      - name: Copy compose, nginx, and env files to VPS
-        shell: bash
-        run: |
-          scp -P "${{ secrets.VPS_PORT }}" \
-            infrastructure/docker/docker-compose.prod.yml \
-            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/ecommerce/infrastructure/docker/docker-compose.prod.yml"
-          scp -P "${{ secrets.VPS_PORT }}" \
-            infrastructure/nginx/nginx.conf \
-            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/ecommerce/infrastructure/nginx/nginx.conf"
-          scp -P "${{ secrets.VPS_PORT }}" \
-            .env.production \
-            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/ecommerce/.env.production"
+            echo "==> Pull derniere version..."
+            git pull origin main
 
-      - name: Deploy over SSH
-        shell: bash
-        run: |
-          ssh -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" <<'EOF'
-          set -e
-          cd /opt/ecommerce
-          git fetch origin main
-          git checkout main
-          git pull origin main
-          docker compose -f infrastructure/docker/docker-compose.prod.yml build
-          docker compose -f infrastructure/docker/docker-compose.prod.yml up -d --build
-          docker compose -f infrastructure/docker/docker-compose.prod.yml exec -T backend npx sequelize-cli db:migrate || true
-          docker image prune -f
-          EOF
+            echo "==> Build et redemarrage des containers..."
+            docker compose -f infrastructure/docker/docker-compose.prod.yml \
+              --env-file .env.production \
+              up -d --build
+
+            echo "==> Nettoyage images inutilisees..."
+            docker image prune -f
+
+            echo "==> Verification sante des containers..."
+            sleep 10
+            docker compose -f infrastructure/docker/docker-compose.prod.yml ps
+
+          ENDSSH
 
       - name: Health check
-        shell: bash
         run: |
-          curl --fail --silent --show-error "http://${{ secrets.VPS_HOST }}/api/health"
+          echo "==> Test API health..."
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}/api/health)
+          if [ "$STATUS" = "200" ]; then
+            echo "✓ API repond correctement (HTTP $STATUS)"
+          else
+            echo "✗ API ne repond pas (HTTP $STATUS)"
+            exit 1
+          fi
 
-      - name: Optional Discord notification
-        if: ${{ success() && secrets.DISCORD_WEBHOOK_URL != '' }}
-        shell: bash
+      - name: Notify success
+        if: success()
         run: |
-          curl -X POST -H "Content-Type: application/json" \
-            -d "{\"content\":\"✅ Deployment succeeded for ${GITHUB_REPOSITORY} @ ${GITHUB_SHA}\"}" \
-            "${{ secrets.DISCORD_WEBHOOK_URL }}"
+          echo "✓ Deploiement reussi sur http://${{ secrets.VPS_HOST }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Auteur: ${{ github.actor }}"
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "✗ Deploiement echoue !"
+          echo "Commit: ${{ github.sha }}"
+          echo "Verifiez les logs sur le VPS :"
+          echo "docker compose -f infrastructure/docker/docker-compose.prod.yml logs"
