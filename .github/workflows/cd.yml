@@ -36,8 +36,9 @@ jobs:
             set -e
             cd /opt/ecommerce/ecommerce-devops
 
-            echo "==> Pull derniere version..."
-            git pull origin main
+            echo "==> Reset et pull derniere version..."
+            git fetch origin main
+            git reset --hard origin/main
 
             echo "==> Build et redemarrage des containers..."
             docker compose -f infrastructure/docker/docker-compose.prod.yml \
@@ -77,5 +78,3 @@ jobs:
         run: |
           echo "✗ Deploiement echoue !"
           echo "Commit: ${{ github.sha }}"
-          echo "Verifiez les logs sur le VPS :"
-          echo "docker compose -f infrastructure/docker/docker-compose.prod.yml logs"
