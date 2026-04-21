@@ -1,19 +1,19 @@
 import request from "supertest";
 
 process.env.NODE_ENV = "test";
-process.env.JWT_SECRET = process.env.JWT_SECRET || "test_secret_key";
-process.env.CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:3000";
+process.env.JWT_SECRET = "test_secret_key_minimum_32_characters_long";
+process.env.CORS_ORIGIN = "http://localhost:3000";
 process.env.DB_HOST = process.env.DB_HOST || "localhost";
 process.env.DB_PORT = process.env.DB_PORT || "5432";
-process.env.DB_NAME = "ecommerce_test";
-process.env.DB_USER = process.env.DB_USER || "postgres";
-process.env.DB_PASSWORD = process.env.DB_PASSWORD || "postgres";
+process.env.DB_NAME = process.env.DB_NAME || "ecommerce_test";
+process.env.DB_USER = process.env.DB_USER || "ecommerce_user";
+process.env.DB_PASSWORD = process.env.DB_PASSWORD || "test_password";
 
 import { app } from "../server";
 import { sequelize } from "../config/database";
 import { User } from "../models/User";
 
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 
 beforeAll(async () => {
   await sequelize.authenticate();
